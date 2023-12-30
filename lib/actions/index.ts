@@ -16,10 +16,7 @@ export async function scrapeAndStoreProduct(productUrl: string) {
 
     const scrapedProduct = await scrapeProduct(productUrl);
     // TODO: permanent - test func
-    return;
-
     if (!scrapedProduct) return;
-
     let product = scrapedProduct;
 
     const existingProduct = await Product.findOne({ url: scrapedProduct.url });
