@@ -2,9 +2,14 @@
 
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { extractCurrency, extractDescription, extractPrice } from '../utils';
+import {
+  extractCurrency,
+  extractDescription,
+  extractPrice,
+  parseVNPrice,
+} from '../utils';
 
-export async function scrapeProduct(url: string) {
+export async function scrapeProduct(url: string, platform: string) {
   if (!url) return;
 
   // BrightData proxy configuration
@@ -30,40 +35,57 @@ export async function scrapeProduct(url: string) {
 
     // console.log('res', response);
 
+    const scarpeDataByPlatform: any = {
+      tiki: {
+        title: $('.Title__TitledStyled-sc-1kxsq5b-0').text().trim(),
+        currentPrice: extractPrice(
+          $('.product-price__current-price'),
+          $('.priceToPay span.a-price-whole'),
+          $('.a.size.base.a-color-price'),
+          $('.a-button-selected .a-color-base')
+        ),
+        originalPrice: extractPrice(
+          $('.a-price.a-text-price span.a-offscreen'),
+          $('#listPrice'),
+          $('#priceblock_dealprice'),
+          $('.a-size-base.a-color-price')
+        ),
+        outOfStock:
+          $('#availability span').text().trim().toLowerCase() ===
+          'currently unavailable',
+        images: $('.webpimg-container').attr('srcset') || '{}',
+        discountRate: $('.product-price__discount-rate')
+          .text()
+          .replace(/[-%]/g, ''),
+        currency: extractCurrency($('.a-price-symbol')),
+        reviewsCount: $('.review-rating__total').text().trim(),
+        stars: $('.review-rating__point').text().trim(),
+      },
+      lazada: {},
+    };
     // Extract the product title
-    const title = $('.rGc12U').text().trim();
-    console.log('tt', title);
+    const title = scarpeDataByPlatform[platform].title;
+    // TODO: price not have .000
+    const currentPrice = scarpeDataByPlatform[platform].currentPrice;
 
-    const currentPrice = extractPrice(
-      $('.priceToPay span.a-price-whole'),
-      $('.a.size.base.a-color-price'),
-      $('.a-button-selected .a-color-base')
-    );
+    const originalPrice = scarpeDataByPlatform[platform].originalPrice;
 
-    const originalPrice = extractPrice(
-      $('#priceblock_ourprice'),
-      $('.a-price.a-text-price span.a-offscreen'),
-      $('#listPrice'),
-      $('#priceblock_dealprice'),
-      $('.a-size-base.a-color-price')
-    );
+    const outOfStock = scarpeDataByPlatform[platform].outOfStock;
 
-    const outOfStock =
-      $('#availability span').text().trim().toLowerCase() ===
-      'currently unavailable';
-
-    const images =
-      $('#imgBlkFront').attr('data-a-dynamic-image') ||
-      $('#landingImage').attr('data-a-dynamic-image') ||
-      '{}';
+    const images = scarpeDataByPlatform[platform].images;
 
     // console.log('title', title);
+    const discountRate = scarpeDataByPlatform[platform].discountRate;
+
+    const currency = scarpeDataByPlatform[platform].currency;
+
     const imageUrls = Object.keys(JSON.parse(images));
 
-    const currency = extractCurrency($('.a-price-symbol'));
-    const discountRate = $('.savingsPercentage').text().replace(/[-%]/g, '');
-
     const description = extractDescription($);
+
+    const reviewsCount = scarpeDataByPlatform[platform].reviewsCount;
+
+    const stars = scarpeDataByPlatform[platform].starts;
 
     // Construct data object with scraped information
     const data = {
@@ -71,18 +93,18 @@ export async function scrapeProduct(url: string) {
       currency: currency || '$',
       image: imageUrls[0],
       title,
-      currentPrice: Number(currentPrice) || Number(originalPrice),
-      originalPrice: Number(originalPrice) || Number(currentPrice),
+      currentPrice: parseVNPrice(currentPrice) || parseVNPrice(originalPrice),
+      originalPrice: parseVNPrice(originalPrice) || parseVNPrice(currentPrice),
       priceHistory: [],
       discountRate: Number(discountRate),
       category: 'category',
-      reviewsCount: 100,
-      stars: 4.5,
+      reviewsCount,
+      stars,
       isOutOfStock: outOfStock,
       description,
-      lowestPrice: Number(currentPrice) || Number(originalPrice),
-      highestPrice: Number(originalPrice) || Number(currentPrice),
-      averagePrice: Number(currentPrice) || Number(originalPrice),
+      lowestPrice: parseVNPrice(currentPrice) || parseVNPrice(originalPrice),
+      highestPrice: parseVNPrice(originalPrice) || parseVNPrice(currentPrice),
+      averagePrice: parseVNPrice(currentPrice) || parseVNPrice(originalPrice),
     };
 
     console.log('data', data);

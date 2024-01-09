@@ -47,7 +47,10 @@ const Searchbar = () => {
 
       // TODO
       // Scrape the product page
-      const product = await scrapeAndStoreProduct(searchPrompt);
+      const product = await scrapeAndStoreProduct(
+        searchPrompt,
+        selectedPlatform
+      );
     } catch (error) {
       console.log(error);
     } finally {
@@ -61,31 +64,31 @@ const Searchbar = () => {
         selectedPlatform={selectedPlatform}
         setSelectedPlatform={setSelectedPlatform}
       />
-      <form className='flex flex-wrap gap-4 mt-12' onSubmit={handleSubmit}>
-        <input
-          type='text'
-          value={searchPrompt}
-          onChange={(e) => setSearchPrompt(e.target.value)}
-          placeholder='Enter Shoppee Product link'
-          className='searchbar-input'
-        />
+      {selectedPlatform && (
+        <form className='flex flex-wrap gap-4 mt-12' onSubmit={handleSubmit}>
+          <input
+            type='text'
+            value={searchPrompt}
+            onChange={(e) => setSearchPrompt(e.target.value)}
+            placeholder='Enter Product link'
+            className='searchbar-input'
+          />
 
-        <button
-          type='submit'
-          className='searchbar-btn flex flex-row gap-2 items-center'
-          disabled={searchPrompt === ''}
-        >
-          {isLoading ? 'Searching...' : 'Search'}{' '}
-          {selectedPlatform && (
+          <button
+            type='submit'
+            className='searchbar-btn flex flex-row gap-2 items-center'
+            disabled={searchPrompt === ''}
+          >
+            {isLoading ? 'Searching...' : 'Search'}{' '}
             <Image
               src={PlatformImageRender(selectedPlatform)}
               alt='logo'
               width={28}
               height={28}
             />
-          )}
-        </button>
-      </form>
+          </button>
+        </form>
+      )}
     </>
   );
 };

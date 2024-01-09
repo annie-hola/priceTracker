@@ -8,13 +8,16 @@ import { getAveragePrice, getHighestPrice, getLowestPrice } from '../utils';
 import { User } from '@/types';
 import { generateEmailBody, sendEmail } from '../nodemailer';
 
-export async function scrapeAndStoreProduct(productUrl: string) {
+export async function scrapeAndStoreProduct(
+  productUrl: string,
+  platform: string
+) {
   if (!productUrl) return;
 
   try {
     // connectToDB();
 
-    const scrapedProduct = await scrapeProduct(productUrl);
+    const scrapedProduct = await scrapeProduct(productUrl, platform);
     // TODO: permanent - test func
     if (!scrapedProduct) return;
     let product = scrapedProduct;

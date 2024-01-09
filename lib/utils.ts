@@ -1,29 +1,33 @@
-import { PriceHistoryItem, Product } from "@/types";
+import { PriceHistoryItem, Product } from '@/types';
 
 const Notification = {
   WELCOME: 'WELCOME',
   CHANGE_OF_STOCK: 'CHANGE_OF_STOCK',
   LOWEST_PRICE: 'LOWEST_PRICE',
   THRESHOLD_MET: 'THRESHOLD_MET',
-}
+};
 
 const THRESHOLD_PERCENTAGE = 40;
+
+export const parseVNPrice = (price: string) => {
+  return parseFloat(price.replace('.', ''));
+};
 
 // Extracts and returns the price from a list of possible elements.
 export function extractPrice(...elements: any) {
   for (const element of elements) {
     const priceText = element.text().trim();
 
-    if(priceText) {
+    if (priceText) {
       const cleanPrice = priceText.replace(/[^\d.]/g, '');
 
-      let firstPrice; 
+      let firstPrice;
 
       if (cleanPrice) {
         firstPrice = cleanPrice.match(/\d+\.\d{2}/)?.[0];
-      } 
+      }
 
-      return firstPrice || cleanPrice;
+      return cleanPrice;
     }
   }
 
@@ -33,15 +37,15 @@ export function extractPrice(...elements: any) {
 // Extracts and returns the currency symbol from an element.
 export function extractCurrency(element: any) {
   const currencyText = element.text().trim().slice(0, 1);
-  return currencyText ? currencyText : "";
+  return currencyText ? currencyText : '';
 }
 
 // Extracts description from two possible elements from amazon
 export function extractDescription($: any) {
   // these are possible elements holding description of the product
   const selectors = [
-    ".a-unordered-list .a-list-item",
-    ".a-expander-content p",
+    '.a-unordered-list .a-list-item',
+    '.a-expander-content p',
     // Add more selectors here if needed
   ];
 
@@ -51,13 +55,13 @@ export function extractDescription($: any) {
       const textContent = elements
         .map((_: any, element: any) => $(element).text().trim())
         .get()
-        .join("\n");
+        .join('\n');
       return textContent;
     }
   }
 
   // If no matching elements were found, return an empty string
-  return "";
+  return '';
 }
 
 export function getHighestPrice(priceList: PriceHistoryItem[]) {
