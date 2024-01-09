@@ -33,8 +33,6 @@ export async function scrapeProduct(url: string, platform: string) {
     const response = await axios.get(url, options);
     const $ = cheerio.load(response.data);
 
-    // console.log('res', response);
-
     const scarpeDataByPlatform: any = {
       tiki: {
         title: $('.Title__TitledStyled-sc-1kxsq5b-0').text().trim(),
@@ -58,40 +56,59 @@ export async function scrapeProduct(url: string, platform: string) {
           .text()
           .replace(/[-%]/g, ''),
         currency: extractCurrency($('.a-price-symbol')),
-        reviewsCount: $('.review-rating__total').text().trim(),
+        reviewsCount: $('div.review-rating__total').text().trim(),
         stars: $('.review-rating__point').text().trim(),
       },
-      lazada: {},
+      lazada: {
+        title: $('.pdp-mod-product-badge-title').text().trim(),
+        currentPrice: extractPrice($('.pdp-price_type_normal')),
+        originalPrice: extractPrice($('.pdp-price_type_deleted')),
+        outOfStock:
+          $('#availability span').text().trim().toLowerCase() ===
+          'currently unavailable',
+        // images: $('.gallery-preview-panel__image').attr('src') || '{}',
+        discountRate: $('.pdp-product-price__discount')
+          .text()
+          .replace(/[-%]/g, ''),
+        currency: extractCurrency($('.a-price-symbol')) || 'đ',
+        reviewsCount: $('.summary > .count').text().trim(),
+        stars: $('.score > .score-average').text().trim(),
+      },
     };
+
+    console.log(
+      'platform',
+      $('.pdp-product-price span.pdp-price_type_normal').text()
+    );
     // Extract the product title
-    const title = scarpeDataByPlatform[platform].title;
+    const title = scarpeDataByPlatform[platform]?.title;
     // TODO: price not have .000
-    const currentPrice = scarpeDataByPlatform[platform].currentPrice;
+    const currentPrice = scarpeDataByPlatform[platform]?.currentPrice;
 
-    const originalPrice = scarpeDataByPlatform[platform].originalPrice;
+    const originalPrice = scarpeDataByPlatform[platform]?.originalPrice;
 
-    const outOfStock = scarpeDataByPlatform[platform].outOfStock;
+    const outOfStock = scarpeDataByPlatform[platform]?.outOfStock;
 
-    const images = scarpeDataByPlatform[platform].images;
+    const images = scarpeDataByPlatform[platform]?.images;
 
     // console.log('title', title);
-    const discountRate = scarpeDataByPlatform[platform].discountRate;
+    const discountRate = scarpeDataByPlatform[platform]?.discountRate;
 
-    const currency = scarpeDataByPlatform[platform].currency;
+    const currency = scarpeDataByPlatform[platform]?.currency;
 
-    const imageUrls = Object.keys(JSON.parse(images));
+    const imageUrls = images && Object.keys(JSON.parse(images));
 
     const description = extractDescription($);
 
-    const reviewsCount = scarpeDataByPlatform[platform].reviewsCount;
+    const reviewsCount = scarpeDataByPlatform[platform]?.reviewsCount;
 
-    const stars = scarpeDataByPlatform[platform].starts;
+    const stars = scarpeDataByPlatform[platform]?.starts;
 
     // Construct data object with scraped information
     const data = {
       url,
       currency: currency || '$',
-      image: imageUrls[0],
+      image: imageUrls && imageUrls[0],
       title,
       currentPrice: parseVNPrice(currentPrice) || parseVNPrice(originalPrice),
       originalPrice: parseVNPrice(originalPrice) || parseVNPrice(currentPrice),
